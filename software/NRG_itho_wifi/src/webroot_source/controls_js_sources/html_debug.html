@@ -68,7 +68,15 @@
                     reset</button><br><span>Filter
                     reset function uses virtual remote 0, this remote needs to be paired with your itho for this command
                     to
-                    work</span>
+                    work</span><br>
+                <br>
+                    <span>Broadcast outside temperature. Leave timestamp and temp1 0 to set default temperature.</span><br>
+                    <button id="buttonCE30" class="pure-button pure-button-primary">Send CE30</button>
+                    temp1 valid until timestamp: <input id="itho_ce30_timestamp" type="number"  min="0" max="4294967295" size="10" value="0">
+                    temp1: <input id="itho_ce30_temp1" type="number" min="-30" max="50" size="4" value="0"><br>
+                    default temp: <input id="itho_ce30_temp2" type="number" min="-30" max="50" size="4" value="0"><br>
+                    <span>Sent command:&nbsp;</span><span id="ithoCE30sendcommand"></span><br>
+                    <span>Result:&nbsp;</span><span id="ithoCE30result"></span><br>
             </fieldset><br><br><br>
         </fieldset>
     </form>

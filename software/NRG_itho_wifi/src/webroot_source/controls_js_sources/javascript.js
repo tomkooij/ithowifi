@@ -568,6 +568,17 @@ $(document).ready(function () {
         value: parseFloat($('#itho_setting_value_set').val())
       }));
     }
+    else if ($(this).attr('id') == 'buttonCE30') {
+      ts = parseFloat($('#itho_ce30_timestamp').val());
+      t1 = parseFloat($('#itho_ce30_temp1').val()) * 100.;
+      t2 = parseFloat($('#itho_ce30_temp2').val()) * 100.;
+      websock.send(JSON.stringify({
+        ithobutton: 0xCE30,
+        val_timestamp: ts,
+        val_temp1: t1,
+        val_temp2: t2
+      }));
+    }
     else if ($(this).attr('id') == 'ithogetsettings') {
       settingIndex = 0;
       websock.send(JSON.stringify({
