@@ -264,6 +264,15 @@ static void wsEvent(struct mg_connection *c, int ev, void *ev_data, void *fn_dat
           {
             setSettingCE30(root["ithotemptemp"].as<int16_t>(), root["ithotemp"].as<int16_t>(), root["ithotimestamp"].as<uint32_t>(), true);
           }
+          else if (val == 4220)
+          {
+            sendQuery4220(true);
+          }
+          else if (val == 1337)
+          {
+            D_LOG("1337!!!!");
+            sendQuery1337(root["cmd_str"].as<const char*>(),true);
+          }
         }
         else
         {

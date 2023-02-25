@@ -1416,6 +1416,123 @@ void setSettingCE30(uint16_t temporary_temperature, uint16_t fallback_temperatur
   }
 }
 
+int char2int(char input)
+{
+  if(input >= '0' && input <= '9')
+    return input - '0';
+  if(input >= 'A' && input <= 'F')
+    return input - 'A' + 10;
+  if(input >= 'a' && input <= 'f')
+    return input - 'a' + 10;
+  return 0;
+}
+
+
+
+
+void sendQuery1337(const char* cmdstr, bool updateweb)
+// cmdstr = "82 80 C2 20 04 00 18"  
+// a string of i2c bytes
+{
+  D_LOG("SendQuery: %s", cmdstr);
+
+  // length of const char* is not sizeof(s)/sizeof(s[0]) :-( 
+  int len_cmd = 0;
+  while(cmdstr[len_cmd] != '\0') len_cmd++;
+  len_cmd = len_cmd/3; //number of hex values in string
+  D_LOG("len_cmd %d", len_cmd);
+  
+  uint8_t command[120] = {};
+  uint16_t msgclass;
+
+  if (len_cmd > 39) {
+    D_LOG("Command too long.");
+    if (updateweb)
+    {
+      jsonSysmessage("itho1337", "failed. Command too long.");
+    }
+    return;
+  }
+
+  for(int i = 0; i < len_cmd; i++) {
+       command[i] = char2int(cmdstr[i*3])*16 + char2int(cmdstr[i*3+1]);
+  }
+  command[len_cmd - 1] = checksum(command, len_cmd - 1); 
+  D_LOG("1337 command: %s", i2cbuf2string(command, len_cmd).c_str());
+  msgclass = command[2]*256+command[3];
+
+  if ((command[0] != 0x82) || (command[1] != 0x80)) { 
+    D_LOG("Not 82 80!");
+    if (updateweb)
+    {
+      jsonSysmessage("itho1337", "failed. Command is not [82 80...]");
+    } 
+    return;
+  }
+
+  if (!i2c_sendBytes(command, len_cmd, I2C_CMD_QUERY_2410))
+  {
+    if (updateweb)
+    {
+      jsonSysmessage("itho1337", "failed");
+    }
+    return;
+  }
+
+  uint8_t i2cbuf[512]{};
+  size_t len = i2c_slave_receive(i2cbuf);
+  if (len > 1 && i2cbuf[len - 1] == checksum(i2cbuf, len - 1) && check_i2c_reply(i2cbuf, len, msgclass))
+  {
+    D_LOG("1337 reply..: %s", i2cbuf2string(i2cbuf, len).c_str());
+    if (updateweb)
+    {
+      jsonSysmessage("itho1337", i2cbuf2string(i2cbuf, len).c_str());
+    }
+  }
+}
+
+
+
+void sendQuery4220(bool updateweb)
+// From servicetl: 10 02 82 80 C2 20 04 00 18 10 03
+{
+
+  uint8_t command[] = {0x82, 0x80, 0x42, 0x20, 0x04, 0x00, 0x18};
+  command[sizeof(command) - 1] = checksum(command, sizeof(command) - 1);
+  D_LOG("4220 send command: %s", i2cbuf2string(command, sizeof(command)).c_str());
+
+  if (!i2c_sendBytes(command, sizeof(command), I2C_CMD_QUERY_2410))
+  {
+    if (updateweb)
+    {
+      jsonSysmessage("itho4220", "failed");
+    }
+    return;
+  }
+
+  uint8_t i2cbuf[512]{};
+  size_t len = i2c_slave_receive(i2cbuf);
+  if (len > 1 && i2cbuf[len - 1] == checksum(i2cbuf, len - 1) && check_i2c_reply(i2cbuf, len, 0x4220))
+  {
+    D_LOG("4220 recv command: %s", i2cbuf2string(i2cbuf, len).c_str());
+    if (updateweb)
+    {
+      jsonSysmessage("itho2410set", i2cbuf2string(i2cbuf, len).c_str());
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 int32_t *sendQuery2410(uint8_t index, bool updateweb)
 {
 
@@ -1428,6 +1545,7 @@ int32_t *sendQuery2410(uint8_t index, bool updateweb)
 
   command[23] = index;
   command[sizeof(command) - 1] = checksum(command, sizeof(command) - 1);
+  D_LOG("2410 send command: %s", i2cbuf2string(command, sizeof(command)).c_str());
 
   if (!i2c_sendBytes(command, sizeof(command), I2C_CMD_QUERY_2410))
   {
@@ -1442,7 +1560,7 @@ int32_t *sendQuery2410(uint8_t index, bool updateweb)
   size_t len = i2c_slave_receive(i2cbuf);
   if (len > 1 && i2cbuf[len - 1] == checksum(i2cbuf, len - 1) && check_i2c_reply(i2cbuf, len, 0x2410))
   {
-
+    D_LOG("2410 recv command: %s", i2cbuf2string(i2cbuf, len).c_str());
     uint8_t tempBuf[] = {i2cbuf[9], i2cbuf[8], i2cbuf[7], i2cbuf[6]};
     std::memcpy(&values[0], tempBuf, 4);
 

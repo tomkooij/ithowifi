@@ -568,6 +568,15 @@ $(document).ready(function () {
         index: parseInt($('#itho_setting_id').val())
       }));
     }
+    else if ($(this).attr('id') == 'button4220') {
+      websock.send(JSON.stringify({ithobutton: 4220}));
+    }
+    else if ($(this).attr('id') == 'button1337') {
+      websock.send(JSON.stringify({
+        ithobutton: 1337,
+        cmd_str: $('#itho_cmd_str').val()
+      }));
+    }
     else if ($(this).attr('id') == 'button2410set') {
       websock.send(JSON.stringify({
         ithobutton: 24109,
